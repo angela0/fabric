@@ -90,6 +90,8 @@ class Task(object):
         if name is not None:
             self.name = name
         self.is_default = default
+        self.pre = kwargs["pre"] if "pre" in kwargs else None
+        self.post = kwargs["post"] if "pre" in kwargs else None
 
     def __details__(self):
         return get_task_details(self.run)
@@ -376,6 +378,9 @@ def execute(task, *args, **kwargs):
     if state.output.debug:
         jobs._debug = True
 
+    # if task.pre is not None, run it
+    if callable(task.pre):
+        task.pre()
     # Call on host list
     if my_env['all_hosts']:
         # Attempt to cycle on hosts, skipping if needed
@@ -425,5 +430,8 @@ def execute(task, *args, **kwargs):
         with settings(**my_env):
             results['<local-only>'] = task.run(*args, **new_kwargs)
     # Return what we can from the inner task executions
+    # if task.post is not None, run it
+    if callable(task.post):
+        task.post()
 
     return results
